@@ -4,7 +4,14 @@
 import requests
 import base64
 from pathlib import Path  # 修正：添加缺失的导入
-Path("docs").mkdir(parents=True, exist_ok=True)
+docs_path = Path("docs")
+
+# 如果存在并且是文件，先删掉
+if docs_path.exists() and not docs_path.is_dir():
+    os.remove(docs_path)
+
+# 确保目录存在
+docs_path.mkdir(parents=True, exist_ok=True)
 # 禁用SSL警告
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
