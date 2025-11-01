@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-精简版节点获取与测试
-直接请求指定线路节点并进行测试
-"""
 
 import requests
 import json
@@ -16,15 +12,6 @@ from datetime import datetime
 # 禁用SSL警告
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-# 剪贴板操作
-try:
-    import pyperclip
-    CLIPBOARD_AVAILABLE = True
-except ImportError:
-    CLIPBOARD_AVAILABLE = False
-    print("⚠ 警告: pyperclip未安装，无法写入剪贴板")
-    print("   安装命令: pip install pyperclip")
 
 # 尝试导入httpx以支持HTTP/2
 try:
@@ -230,15 +217,6 @@ class NodeTester:
                         out.parent.mkdir(parents=True, exist_ok=True)
                         out.write_text(content, encoding="utf-8")
                         print("订阅文件已生成:", out)
-                        # 写入剪贴板
-                        if CLIPBOARD_AVAILABLE:
-                            try:
-                                pyperclip.copy(ss_link)
-                                print(f"\n✓ SS链接已复制到剪贴板")
-                            except Exception as e:
-                                print(f"\n✗ 复制到剪贴板失败: {str(e)}")
-                        
-                        return ss_conf
                 
                 print(f"✗ 获取节点失败: {data}")
                 return None
