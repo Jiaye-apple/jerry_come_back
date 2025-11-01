@@ -3,15 +3,8 @@
 
 import requests
 import base64
-from pathlib import Path  # 修正：添加缺失的导入
-docs_path = Path("docs")
+from pathlib import Path
 
-# 如果存在并且是文件，先删掉
-if docs_path.exists() and not docs_path.is_dir():
-    os.remove(docs_path)
-
-# 确保目录存在
-docs_path.mkdir(parents=True, exist_ok=True)
 # 禁用SSL警告
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -57,12 +50,15 @@ class NodeTester:
         server = ss_conf.get('server', '')
         port = ss_conf.get('port', '')
         
+        # 拼接 method:password
         auth_string = f"{method}:{password}"
         
+        # 进行 URL-safe Base64 编码
         auth_bytes = auth_string.encode('utf-8')
         base64_encoded = base64.urlsafe_b64encode(auth_bytes).decode('utf-8')
-        base64_encoded = base64_encoded.rstrip('=')
+        base64_encoded = base64_encoded.rstrip('=') # 移除=
         
+        # 拼接成 ss:// 链接
         ss_link = f"ss://{base64_encoded}@{server}:{port}#{label}"
         
         return ss_link
@@ -75,7 +71,6 @@ class NodeTester:
     def get_node_and_write_file(self, line_id=925):
         """
         核心功能：获取节点、生成SS链接、并写入txt文件
-        (此函数合并了原版的 get_node_post 和文件写入逻辑)
         """
         url = f"{self.base_url}/api/2/line/connect/{line_id}"
         
@@ -123,9 +118,10 @@ class NodeTester:
                         
                         # 1. 生成 SS 链接
                         ss_link = self.generate_ss_link(ss_conf, line_id)
+                        print(f"✓ 生成链接: {ss_link}")
                         
-                        # 2. 将SS链接本身进行Base64编码 (作为订阅内容)
-                        content = base64.b64encode(ss_link.encode('utf-8')).decode('utf-8')
+                        # 2. 【已修正】准备写入文件的内容 (直接使用SS链接)
+                        content = ss_link
                         
                         # 3. 写入文件
                         out_path = Path("docs/sub.txt")
@@ -134,6 +130,7 @@ class NodeTester:
                         
                         print(f"\n✓✓✓ 订阅文件已成功生成! ✓✓✓")
                         print(f"   文件路径: {out_path.resolve()}")
+                        print(f"   文件内容: {content}")
                         return True
                     else:
                         print(f"✗ 获取节点失败: 响应中未包含 'SSConf'。")
@@ -156,11 +153,10 @@ class NodeTester:
 
 
 if __name__ == "__main__":
-    # 确保 httpx 已安装 (在GitHub Actions中需要)
     if not HTTP2_AVAILABLE:
-        print("错误: 核心依赖 'httpx' 未安装。")
-        print("请在 requirements.txt 或 workflow 中添加 'httpx[http2]'。")
-        exit(1) # 在CI环境中以失败退出
+        print("警告: 推荐安装 'httpx[http2]' 以获得更好的性能。")
+        print("   pip install httpx[http2]")
+        # 即使没有http2，仍然继续使用http/1.1
         
     tester = NodeTester()
     
@@ -169,5 +165,4 @@ if __name__ == "__main__":
     
     if not success:
         print("流程执行失败。")
-        # 在 CI/CD 环境中，用非0退出码表示失败
-        exit(1)
+        exit(1) # 在 CI/CD 环境中，用非0退出码表示失败
