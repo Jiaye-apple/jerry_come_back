@@ -4,6 +4,7 @@
 import requests
 import base64
 from pathlib import Path
+import json # 导入json库以便在出错时打印
 
 # 禁用SSL警告
 import urllib3
@@ -49,6 +50,11 @@ class NodeTester:
         server = ss_conf.get('server', '')
         port = ss_conf.get('port', '')
         
+        # 检查核心信息是否存在
+        if not all([method, password, server, port]):
+            print(f"  > 警告: 节点信息不完整，跳过生成。 {ss_conf}")
+            return None
+
         auth_string = f"{method}:{password}"
         
         auth_bytes = auth_string.encode('utf-8')
@@ -66,12 +72,11 @@ class NodeTester:
     
     def get_multiple_nodes_and_write_file(self):
         """
-        【新】核心功能：获取多个节点、生成SS链接、并写入txt文件
+        核心功能：获取多个节点、生成SS链接、并写入txt文件
         """
-        # 【已修改】使用新的 'connectmultiple' 终结点
         url = f"{self.base_url}/api/2/line/connectmultiple"
         
-        # 请求体 (保持不变, 它包含设备和协议信息)
+        # 请求体 (保持不变)
         payload = {
             "available_proto": ["SS", "Trojan", "GTS"],
             "methods": ["chacha20-ietf-poly1305"],
@@ -105,30 +110,34 @@ class NodeTester:
             if response.status_code == 200:
                 data = response.json()
                 
+                # 检查API返回的顶层状态
                 if data.get("code") == 0 and data.get("status") == "ok":
                     
-                    # 【新解析逻辑】假设 'config' 现在是一个列表 [...]
-                    node_list = data.get("config", [])
+                    # 【已修正】根据您的JSON，使用 'configs' (复数)
+                    node_list = data.get("configs", [])
                     
                     if not isinstance(node_list, list) or not node_list:
-                        print(f"✗ 获取节点失败: 响应中的 'config' 不是一个列表或为空。")
-                        print(f"  响应数据: {data}")
+                        print(f"✗ 获取节点失败: 响应中的 'configs' 不是一个列表或为空。")
+                        print(f"  响应数据: {json.dumps(data, indent=2)}")
                         return False
                     
                     print(f"✓ 成功获取到 {len(node_list)} 个节点配置，正在解析...")
                     
                     all_ss_links = []
                     
-                    # 【新】循环遍历所有节点
+                    # 循环遍历所有节点
                     for node_config in node_list:
                         ss_conf = node_config.get("SSConf", {})
-                        # 尝试获取 line_id 作为标签, 否则使用 'Unknown'
-                        label = node_config.get("line_id", "Unknown") 
+                        
+                        # 【已修正】根据您的JSON，'line_id' 不存在
+                        # 我们使用 'server' IP 作为标签
+                        label = ss_conf.get("server", "Unknown-Label") 
                         
                         if ss_conf:
                             ss_link = self.generate_ss_link(ss_conf, label)
-                            all_ss_links.append(ss_link)
-                            print(f"  > 已解析节点 (标签: {label}, 服务器: {ss_conf.get('server')})")
+                            if ss_link: # 仅在ss_link有效时才添加
+                                all_ss_links.append(ss_link)
+                                print(f"  > 已解析节点 (标签: {label})")
                         else:
                             print(f"  > 警告: 列表中的一个项目缺少 'SSConf'。")
 
@@ -136,7 +145,7 @@ class NodeTester:
                         print("✗ 解析失败：未能在任何节点配置中找到有效的 'SSConf'。")
                         return False
 
-                    # 【已修改】将所有链接用换行符连接成一个字符串
+                    # 将所有链接用换行符连接成一个字符串
                     content = "\n".join(all_ss_links)
                     
                     # 写入文件
@@ -152,7 +161,7 @@ class NodeTester:
                 
                 else:
                     print(f"✗ API返回错误: {data.get('status', 'N/A')}")
-                    print(f"  响应数据: {data}")
+                    print(f"  响应数据: {json.dumps(data, indent=2)}")
                     return False
             else:
                 print(f"✗ POST请求失败")
@@ -173,7 +182,6 @@ if __name__ == "__main__":
         
     tester = NodeTester()
     
-    # 【已修改】调用新的多节点函数
     success = tester.get_multiple_nodes_and_write_file()
     
     if not success:
