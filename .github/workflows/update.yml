@@ -1,0 +1,44 @@
+name: Update subscription
+
+on:
+  schedule:
+    - cron: "0 */4 * * *"   # 每小时运行一次（UTC时间）
+  workflow_dispatch:       # 手动触发
+  push:
+    paths:
+      - "src/**"
+      - ".github/workflows/update.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          # 如果你的脚本需要 requests 等库，在这里安装：
+          # pip install requests
+
+      - name: Run script
+        run: |
+          python 节点获取.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain docs/sub.txt)" ]; then
+            git add docs/sub.txt
+            git commit -m "update subscription $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            git push
+          else
+            echo "No changes to commit."
