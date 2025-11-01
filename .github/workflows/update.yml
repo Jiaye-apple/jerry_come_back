@@ -2,8 +2,8 @@ name: Update subscription
 
 on:
   schedule:
-    - cron: "0 */4 * * *"   # 每小时运行一次（UTC时间）
-  workflow_dispatch:       # 手动触发
+    - cron: "0 */4 * * *"   # 每 4 小时运行一次（UTC 时间）
+  workflow_dispatch:         # 手动触发
   push:
     paths:
       - "src/**"
@@ -25,12 +25,11 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          # 如果你的脚本需要 requests 等库，在这里安装：
-          # pip install requests
+          pip install requests urllib3 httpx pyperclip
 
       - name: Run script
         run: |
-          python 节点获取.py
+          python fetch_sub.py
 
       - name: Commit and push
         run: |
