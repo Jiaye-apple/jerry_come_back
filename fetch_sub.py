@@ -108,19 +108,23 @@ class NodeTester:
             if response.status_code == 200:
                 data = response.json()
                 
+                # --- 【新添加的打印行 V2】 ---
+                print("\n--- 正在打印【完整】的原始响应结果 ---")
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+                print("----------------------------------------\n")
+                # ----------------------------------
+                
                 if data.get("code") == 0 and data.get("status") == "ok":
                     
                     node_list = data.get("configs", [])
                     
-                    # --- 【新添加的打印行】 ---
+                    # (保留之前对 'configs' 的单独打印，方便调试)
                     print("\n--- 正在打印 'configs' 原始列表内容 ---")
                     print(json.dumps(node_list, indent=2, ensure_ascii=False))
                     print("----------------------------------------\n")
-                    # ---------------------------
                     
                     if not isinstance(node_list, list) or not node_list:
                         print(f"✗ 获取节点失败: 响应中的 'configs' 不是一个列表或为空。")
-                        print(f"  完整响应: {json.dumps(data, indent=2)}")
                         return False
                     
                     print(f"✓ 成功获取到 {len(node_list)} 个节点配置，正在循环解析...")
@@ -157,7 +161,6 @@ class NodeTester:
                 
                 else:
                     print(f"✗ API返回错误: {data.get('status', 'N/A')}")
-                    print(f"  响应数据: {json.dumps(data, indent=2)}")
                     return False
             else:
                 print(f"✗ POST请求失败")
