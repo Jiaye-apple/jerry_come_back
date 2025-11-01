@@ -5,6 +5,10 @@
 
 # 但不忽略 .gitignore 本身
 !.gitignore
+
 # 允许节点获取.py
 !节点获取.py
 
+# 允许 docs 文件夹及其内容
+!docs/
+!docs/**
