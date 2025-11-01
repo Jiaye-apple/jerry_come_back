@@ -1,56 +1,38 @@
-name: Update subscription
+name: Auto Commit
 
 on:
   schedule:
-    - cron: "*/30 * * * *"  # <--- 修正：从 */2 改为 */4 (每4小时)
-  workflow_dispatch:      # 手动触发
-  push:
-    paths:
-      - "src/**"
-      - ".github/workflows/update.yml"
+    - cron: "*/30 * * * *"   # 每30分钟执行一次
+  workflow_dispatch:          # 手动触发
 
 jobs:
-  build:
+  update:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Checkout repository
+        uses: actions/checkout@v3
         with:
-          python-version: "3.11"
+          fetch-depth: 0   # 必须完整拉取，避免 rebase 出错
 
-      - name: Install deps
+      - name: Set up Git
         run: |
-          python -m pip install --upgrade pip
-          # <--- 修正：移除了 pyperclip
-          pip install requests urllib3 "httpx[http2]"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      # <--- 修正：删除了整个 "Ensure docs directory" 步骤
-      # Python 脚本会自动处理目录创建
-
-      - name: Run script
+      - name: Make changes
         run: |
-          # 确保您的脚本名为 fetch_sub.py
-          python fetch_sub.py
-      
-      # <--- 修正：删除了整个 "Setup git auth" 步骤
-      # 因为它在下一步中被重复了
+          # 在这里写你要自动生成或修改的命令
+          echo "update subscription $(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> docs/sub.txt
 
-      - name: Commit and push
+      - name: Commit changes
         run: |
-          # Git 设置只需要在这里运行一次
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          
-          # 检查文件是否有实际更改
-          if [ -n "$(git status --porcelain docs/sub.txt)" ]; then
-            git add -f docs/sub.txt
-            git commit -m "update subscription $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-            git push
-          else
-            echo "No changes to commit."
-          fi
+          git add .
+          git commit -m "update subscription $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "No changes to commit"
+
+      - name: Pull latest changes with rebase
+        run: |
+          git pull origin master --rebase
+
+      - name: Push changes
+        run: |
+          git push origin master
