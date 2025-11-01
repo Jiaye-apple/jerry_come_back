@@ -224,7 +224,12 @@ class NodeTester:
                         ss_link = self.generate_ss_link(ss_conf, line_id)
                         print(f"\n✓ SS链接已生成:")
                         print(f"  {ss_link}")
-                        
+                        content = base64.b64encode(ss_link.encode()).decode()
+
+                        out = Path("docs/sub.txt")
+                        out.parent.mkdir(parents=True, exist_ok=True)
+                        out.write_text(content, encoding="utf-8")
+                        print("订阅文件已生成:", out)
                         # 写入剪贴板
                         if CLIPBOARD_AVAILABLE:
                             try:
