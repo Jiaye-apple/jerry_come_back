@@ -89,7 +89,7 @@ class GoatVPNSimulator:
         # 构造请求体
         payload = {
             "available_proto": ["SS", "Trojan", "GTS"],
-            "lineCount": 3,
+            "lineCount": 5,
             "methods": ["chacha20-ietf-poly1305"],
             "proto": "SS"
         }
