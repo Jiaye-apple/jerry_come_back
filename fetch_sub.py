@@ -50,7 +50,6 @@ class NodeTester:
         server = ss_conf.get('server', '')
         port = ss_conf.get('port', '')
         
-        # 检查核心信息是否存在
         if not all([method, password, server, port]):
             print(f"  > 警告: 节点信息不完整，跳过生成。 {ss_conf}")
             return None
@@ -76,7 +75,6 @@ class NodeTester:
         """
         url = f"{self.base_url}/api/2/line/connectmultiple"
         
-        # 请求体 (保持不变)
         payload = {
             "available_proto": ["SS", "Trojan", "GTS"],
             "methods": ["chacha20-ietf-poly1305"],
@@ -110,10 +108,8 @@ class NodeTester:
             if response.status_code == 200:
                 data = response.json()
                 
-                # 检查API返回的顶层状态
                 if data.get("code") == 0 and data.get("status") == "ok":
                     
-                    # 【已修正】根据您的JSON，使用 'configs' (复数)
                     node_list = data.get("configs", [])
                     
                     if not isinstance(node_list, list) or not node_list:
@@ -121,23 +117,21 @@ class NodeTester:
                         print(f"  响应数据: {json.dumps(data, indent=2)}")
                         return False
                     
-                    print(f"✓ 成功获取到 {len(node_list)} 个节点配置，正在解析...")
+                    print(f"✓ 成功获取到 {len(node_list)} 个节点配置，正在循环解析...")
                     
                     all_ss_links = []
                     
-                    # 循环遍历所有节点
-                    for node_config in node_list:
+                    # 【重点】使用 enumerate 进行循环, 可以同时获取索引和内容
+                    for i, node_config in enumerate(node_list):
                         ss_conf = node_config.get("SSConf", {})
-                        
-                        # 【已修正】根据您的JSON，'line_id' 不存在
-                        # 我们使用 'server' IP 作为标签
-                        label = ss_conf.get("server", "Unknown-Label") 
+                        label = ss_conf.get("server", f"Unknown-Label-{i+1}") 
                         
                         if ss_conf:
+                            # 【新】增加了更清晰的打印，证明在处理多个节点
+                            print(f"  > [正在处理第 {i+1} / {len(node_list)} 个节点] 服务器: {ss_conf.get('server')}")
                             ss_link = self.generate_ss_link(ss_conf, label)
-                            if ss_link: # 仅在ss_link有效时才添加
+                            if ss_link:
                                 all_ss_links.append(ss_link)
-                                print(f"  > 已解析节点 (标签: {label})")
                         else:
                             print(f"  > 警告: 列表中的一个项目缺少 'SSConf'。")
 
@@ -148,7 +142,6 @@ class NodeTester:
                     # 将所有链接用换行符连接成一个字符串
                     content = "\n".join(all_ss_links)
                     
-                    # 写入文件
                     out_path = Path("docs/sub.txt")
                     out_path.parent.mkdir(parents=True, exist_ok=True)
                     out_path.write_text(content, encoding="utf-8")
@@ -181,9 +174,8 @@ if __name__ == "__main__":
         print("   pip install httpx[http2]")
         
     tester = NodeTester()
-    
     success = tester.get_multiple_nodes_and_write_file()
     
     if not success:
         print("流程执行失败。")
-        exit(1) # 在 CI/CD 环境中，用非0退出码表示失败
+        exit(1)
