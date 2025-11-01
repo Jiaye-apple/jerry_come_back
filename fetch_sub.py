@@ -43,22 +43,18 @@ class NodeTester:
     def generate_ss_link(self, ss_conf, label):
         """
         生成标准的 SS 链接
-        (保留, 核心功能需要)
         """
         method = ss_conf.get('method', '')
         password = ss_conf.get('password', '')
         server = ss_conf.get('server', '')
         port = ss_conf.get('port', '')
         
-        # 拼接 method:password
         auth_string = f"{method}:{password}"
         
-        # 进行 URL-safe Base64 编码
         auth_bytes = auth_string.encode('utf-8')
         base64_encoded = base64.urlsafe_b64encode(auth_bytes).decode('utf-8')
-        base64_encoded = base64_encoded.rstrip('=') # 移除=
+        base64_encoded = base64_encoded.rstrip('=')
         
-        # 拼接成 ss:// 链接
         ss_link = f"ss://{base64_encoded}@{server}:{port}#{label}"
         
         return ss_link
@@ -68,13 +64,14 @@ class NodeTester:
         if hasattr(self, 'http2_client') and self.http2_client:
             self.http2_client.close()
     
-    def get_node_and_write_file(self, line_id=925):
+    def get_multiple_nodes_and_write_file(self):
         """
-        核心功能：获取节点、生成SS链接、并写入txt文件
+        【新】核心功能：获取多个节点、生成SS链接、并写入txt文件
         """
-        url = f"{self.base_url}/api/2/line/connect/{line_id}"
+        # 【已修改】使用新的 'connectmultiple' 终结点
+        url = f"{self.base_url}/api/2/line/connectmultiple"
         
-        # 请求体 (不可更改, 与原版一致)
+        # 请求体 (保持不变, 它包含设备和协议信息)
         payload = {
             "available_proto": ["SS", "Trojan", "GTS"],
             "methods": ["chacha20-ietf-poly1305"],
@@ -93,10 +90,9 @@ class NodeTester:
         }
         
         print("="*60)
-        print(f"正在获取线路 {line_id} 的节点...")
+        print(f"正在从 {url} 获取多个节点...")
         
         try:
-            # 使用HTTP/2客户端 (如果可用)
             if self.http2_client:
                 response = self.http2_client.post(url, headers=self.headers, json=payload)
                 print(f"✓ 使用HTTP/2协议 (POST {url})")
@@ -110,32 +106,50 @@ class NodeTester:
                 data = response.json()
                 
                 if data.get("code") == 0 and data.get("status") == "ok":
-                    config = data.get("config", {})
-                    ss_conf = config.get("SSConf", {})
                     
-                    if ss_conf:
-                        print(f"✓ 成功获取节点信息 (Server: {ss_conf.get('server')})")
-                        
-                        # 1. 生成 SS 链接
-                        ss_link = self.generate_ss_link(ss_conf, line_id)
-                        print(f"✓ 生成链接: {ss_link}")
-                        
-                        # 2. 【已修正】准备写入文件的内容 (直接使用SS链接)
-                        content = ss_link
-                        
-                        # 3. 写入文件
-                        out_path = Path("docs/sub.txt")
-                        out_path.parent.mkdir(parents=True, exist_ok=True)
-                        out_path.write_text(content, encoding="utf-8")
-                        
-                        print(f"\n✓✓✓ 订阅文件已成功生成! ✓✓✓")
-                        print(f"   文件路径: {out_path.resolve()}")
-                        print(f"   文件内容: {content}")
-                        return True
-                    else:
-                        print(f"✗ 获取节点失败: 响应中未包含 'SSConf'。")
+                    # 【新解析逻辑】假设 'config' 现在是一个列表 [...]
+                    node_list = data.get("config", [])
+                    
+                    if not isinstance(node_list, list) or not node_list:
+                        print(f"✗ 获取节点失败: 响应中的 'config' 不是一个列表或为空。")
                         print(f"  响应数据: {data}")
                         return False
+                    
+                    print(f"✓ 成功获取到 {len(node_list)} 个节点配置，正在解析...")
+                    
+                    all_ss_links = []
+                    
+                    # 【新】循环遍历所有节点
+                    for node_config in node_list:
+                        ss_conf = node_config.get("SSConf", {})
+                        # 尝试获取 line_id 作为标签, 否则使用 'Unknown'
+                        label = node_config.get("line_id", "Unknown") 
+                        
+                        if ss_conf:
+                            ss_link = self.generate_ss_link(ss_conf, label)
+                            all_ss_links.append(ss_link)
+                            print(f"  > 已解析节点 (标签: {label}, 服务器: {ss_conf.get('server')})")
+                        else:
+                            print(f"  > 警告: 列表中的一个项目缺少 'SSConf'。")
+
+                    if not all_ss_links:
+                        print("✗ 解析失败：未能在任何节点配置中找到有效的 'SSConf'。")
+                        return False
+
+                    # 【已修改】将所有链接用换行符连接成一个字符串
+                    content = "\n".join(all_ss_links)
+                    
+                    # 写入文件
+                    out_path = Path("docs/sub.txt")
+                    out_path.parent.mkdir(parents=True, exist_ok=True)
+                    out_path.write_text(content, encoding="utf-8")
+                    
+                    print(f"\n✓✓✓ 订阅文件已成功生成! ✓✓✓")
+                    print(f"   文件路径: {out_path.resolve()}")
+                    print(f"   文件内容 (共 {len(all_ss_links)} 个节点):")
+                    print(content) # 打印出所有链接
+                    return True
+                
                 else:
                     print(f"✗ API返回错误: {data.get('status', 'N/A')}")
                     print(f"  响应数据: {data}")
@@ -156,12 +170,11 @@ if __name__ == "__main__":
     if not HTTP2_AVAILABLE:
         print("警告: 推荐安装 'httpx[http2]' 以获得更好的性能。")
         print("   pip install httpx[http2]")
-        # 即使没有http2，仍然继续使用http/1.1
         
     tester = NodeTester()
     
-    # 直接调用核心函数
-    success = tester.get_node_and_write_file(line_id=925)
+    # 【已修改】调用新的多节点函数
+    success = tester.get_multiple_nodes_and_write_file()
     
     if not success:
         print("流程执行失败。")
