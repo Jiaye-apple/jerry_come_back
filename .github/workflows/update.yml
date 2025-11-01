@@ -2,7 +2,7 @@ name: Update subscription
 
 on:
   schedule:
-    - cron: "0 */4 * * *"   # 每 4 小时运行一次（UTC 时间）
+    - cron: "0 */2 * * *"   # 每 4 小时运行一次（UTC 时间）
   workflow_dispatch:         # 手动触发
   push:
     paths:
