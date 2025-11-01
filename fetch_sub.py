@@ -112,22 +112,26 @@ class NodeTester:
                     
                     node_list = data.get("configs", [])
                     
+                    # --- 【新添加的打印行】 ---
+                    print("\n--- 正在打印 'configs' 原始列表内容 ---")
+                    print(json.dumps(node_list, indent=2, ensure_ascii=False))
+                    print("----------------------------------------\n")
+                    # ---------------------------
+                    
                     if not isinstance(node_list, list) or not node_list:
                         print(f"✗ 获取节点失败: 响应中的 'configs' 不是一个列表或为空。")
-                        print(f"  响应数据: {json.dumps(data, indent=2)}")
+                        print(f"  完整响应: {json.dumps(data, indent=2)}")
                         return False
                     
                     print(f"✓ 成功获取到 {len(node_list)} 个节点配置，正在循环解析...")
                     
                     all_ss_links = []
                     
-                    # 【重点】使用 enumerate 进行循环, 可以同时获取索引和内容
                     for i, node_config in enumerate(node_list):
                         ss_conf = node_config.get("SSConf", {})
                         label = ss_conf.get("server", f"Unknown-Label-{i+1}") 
                         
                         if ss_conf:
-                            # 【新】增加了更清晰的打印，证明在处理多个节点
                             print(f"  > [正在处理第 {i+1} / {len(node_list)} 个节点] 服务器: {ss_conf.get('server')}")
                             ss_link = self.generate_ss_link(ss_conf, label)
                             if ss_link:
@@ -139,7 +143,6 @@ class NodeTester:
                         print("✗ 解析失败：未能在任何节点配置中找到有效的 'SSConf'。")
                         return False
 
-                    # 将所有链接用换行符连接成一个字符串
                     content = "\n".join(all_ss_links)
                     
                     out_path = Path("docs/sub.txt")
@@ -149,7 +152,7 @@ class NodeTester:
                     print(f"\n✓✓✓ 订阅文件已成功生成! ✓✓✓")
                     print(f"   文件路径: {out_path.resolve()}")
                     print(f"   文件内容 (共 {len(all_ss_links)} 个节点):")
-                    print(content) # 打印出所有链接
+                    print(content)
                     return True
                 
                 else:
