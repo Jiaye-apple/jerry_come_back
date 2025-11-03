@@ -16,7 +16,7 @@ class GoatVPNSimulator:
     def __init__(self):
         # 基础配置
         self.base_url = "https://abscf2.fobwifi.com"
-        self.token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIwNzczODI1NTQsImlhdCI6MTc2MjAyMjU1NCwia2V5IjoiMUYyRTA2MUNCNjZDRTAwMFB0eHAwZk1pcVtxNDZzNzgxMjU5UFBzRnljRU1QMDZHMjdQMDcwTTU1Nzc0QjBbVyIsIm9yZyI6InRyYW5zb2Nrc19taXgiLCJ1c2VyIjp7ImlkIjoxOTM2NzUxMX19.o6U0NTej1-GNb8wPEQ5TmyXltr1yjOU2e-HFPS5Ed_o"
+        self.token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIwNzczMDE5NzUsImlhdCI6MTc2MTk0MTk3NSwia2V5IjoiMUYyQ0QyQkEyRTkyOTAwMFl3bzFcXFM0UzJZaXhwNTRhQ3I5cTM4emlHN3h0QW1RWkE5aFo4OVQ1VjlbenJjYnciLCJvcmciOiJ0cmFuc29ja3NfbWl4IiwidXNlciI6eyJpZCI6MTk4MjQ5MTJ9fQ.OYB_OY7vbbNarMgi5LcvHKi03SPhSrHwzoYD0rOK8kU"
         
         # 设备参数（从抓包数据中提取）
         self.device_params = {
