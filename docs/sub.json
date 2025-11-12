@@ -1,0 +1,18 @@
+[
+  {
+    "server": "222.186.150.77",
+    "port": 42187,
+    "method": "aes-256-cfb",
+    "password": "165u2w4lJuMufLWZ",
+    "label": "VIP1",
+    "link": "ss://YWVzLTI1Ni1jZmI6MTY1dTJ3NGxKdU11ZkxXWg==@222.186.150.77:42187#VIP1"
+  },
+  {
+    "server": "218.61.211.74",
+    "port": 38317,
+    "method": "chacha20-ietf-poly1305",
+    "password": "KlJs8RouP2kuPGrC",
+    "label": "VIP2",
+    "link": "ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpLbEpzOFJvdVAya3VQR3JD@218.61.211.74:38317#VIP2"
+  }
+]
