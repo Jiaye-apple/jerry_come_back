@@ -2,7 +2,7 @@ name: Update subscription
 
 on:
   schedule:
-    - cron: "0 9 */3 * *"
+    - cron: "0 3 */2 * *"
   workflow_dispatch:
   push:
     paths:
