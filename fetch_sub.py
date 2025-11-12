@@ -288,7 +288,7 @@ class GoatVPNSimulator:
         
         payload = {
             "available_proto": ["SS", "Trojan", "GTS", "VMess", "VLESS"],
-            "lineCount": 4,
+            "lineCount": 2,
             "methods": ["chacha20-ietf-poly1305", "aes-256-gcm"],
             "proto": "SS"  # 只是默认，不限制返回
         }
