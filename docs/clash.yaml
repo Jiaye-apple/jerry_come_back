@@ -1,16 +1,16 @@
 proxies:
   - name: VIP1-SS
     type: ss
-    server: 36.150.45.246
-    port: 46169
+    server: 36.150.88.147
+    port: 43513
     cipher: chacha20-ietf-poly1305
-    password: U6d5RS8v6rgTZ8Yj
+    password: 4Em5DP2vHmyu6qn0
   - name: VIP2-SS
     type: ss
-    server: 115.231.225.12
-    port: 32905
+    server: 112.85.242.67
+    port: 45375
     cipher: chacha20-ietf-poly1305
-    password: Lk886Fat3nuh2968
+    password: E769477LB5D8KfM7
 
 proxy-groups:
   - name: AUTO
